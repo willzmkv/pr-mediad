@@ -17,7 +17,8 @@ static char *make_temp_gc_disc(void) {
     /* magic GameCube: C2 33 9F 3D */
     buf[0x1C] = 0xC2; buf[0x1D] = 0x33;
     buf[0x1E] = 0x9F; buf[0x1F] = 0x3D;
-    write(fd, buf, sizeof(buf));
+    ssize_t w = write(fd, buf, sizeof(buf));
+    assert(w == (ssize_t)sizeof(buf));
     close(fd);
     return path;
 }
@@ -36,7 +37,8 @@ static void test_detect_magic_unknown(void) {
     int fd = mkstemp(path);
     uint8_t buf[0x20];
     memset(buf, 0xFF, sizeof(buf));
-    write(fd, buf, sizeof(buf));
+    ssize_t w = write(fd, buf, sizeof(buf));
+    assert(w == (ssize_t)sizeof(buf));
     close(fd);
     PlatformID id = detect_magic_bytes(path);
     assert(id == PLATFORM_UNKNOWN);
