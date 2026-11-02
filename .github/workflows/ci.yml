@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    name: Build + ctest
+    name: Build + ctest (Ubuntu)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,7 +17,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y \
-            cmake build-essential \
+            cmake build-essential pkg-config \
             libudev-dev libblkid-dev libnotify-dev
 
       - name: Configure
@@ -29,17 +29,47 @@ jobs:
       - name: Test
         run: ctest --test-dir build -V --output-on-failure
 
-  lint:
-    name: clang-format
+  arch:
+    name: Arch Linux (strict + sanitizers)
     runs-on: ubuntu-latest
+    container: archlinux:latest
+    defaults:
+      run:
+        shell: bash
     steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm --needed \
+            base-devel git cmake pkgconf \
+            systemd systemd-libs util-linux-libs libnotify
+
       - uses: actions/checkout@v4
 
-      - name: Install clang-format
-        run: sudo apt-get install -y clang-format
-
-      - name: Check formatting
+      # Release build with the flags makepkg uses on Arch/CachyOS, warnings fatal
+      - name: Build (Release, makepkg CFLAGS, -Werror)
         run: |
-          find src include -name '*.c' -o -name '*.h' | \
-          xargs clang-format --dry-run --Werror 2>/dev/null || \
-          echo "No src/include yet — skipping"
+          source /etc/makepkg.conf
+          CFLAGS="$CFLAGS -Werror" cmake -B build-release \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+          cmake --build build-release --parallel
+
+      - name: Test (Release)
+        run: ctest --test-dir build-release --output-on-failure
+
+      - name: Build (Debug, ASan + UBSan)
+        run: |
+          CFLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all" \
+          LDFLAGS="-fsanitize=address,undefined" \
+            cmake -B build-asan -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build-asan --parallel
+
+      - name: Test (ASan + UBSan)
+        run: ctest --test-dir build-asan --output-on-failure
+
+      - name: Verify systemd unit and tmpfiles.d
+        run: |
+          cmake --install build-release
+          systemd-analyze verify /usr/lib/systemd/system/pr-mediad.service
+          useradd -m arcade
+          systemd-tmpfiles --create "$PWD/pr-mediad-tmpfiles.conf"
+          test "$(stat -c %U /run/project-r)" = arcade
