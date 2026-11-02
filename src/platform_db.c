@@ -45,7 +45,7 @@ static const uint8_t MAGIC_XBOX[]     = {0x4D, 0x49, 0x43, 0x52, 0x4F,
 
 static const DiscSignature DISC_SIGS[] = {
     {PLATFORM_GAMECUBE,  SIG_MAGIC_BYTES, 0x1C, MAGIC_GC,     4,    NULL, NULL},
-    {PLATFORM_WII,       SIG_MAGIC_BYTES, 0x1C, MAGIC_WII,    4,    NULL, NULL},
+    {PLATFORM_WII,       SIG_MAGIC_BYTES, 0x18, MAGIC_WII,    4,    NULL, NULL}, /* 0x1C é o magic GC (zero em discos Wii) */
     {PLATFORM_SATURN,    SIG_MAGIC_BYTES, 0x00, MAGIC_SATURN, 15,   NULL, NULL},
     {PLATFORM_DREAMCAST, SIG_MAGIC_BYTES, 0x00, MAGIC_DC,     15,   NULL, NULL},
     {PLATFORM_XBOX,      SIG_MAGIC_BYTES, 0x10000, MAGIC_XBOX,14,   NULL, NULL},

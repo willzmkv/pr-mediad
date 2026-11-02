@@ -32,6 +32,25 @@ static void test_detect_magic_gamecube(void) {
     printf("PASS: test_detect_magic_gamecube\n");
 }
 
+/* Cabeçalho de disco Nintendo: magic Wii em 0x18, magic GameCube em 0x1C
+ * (em discos Wii o campo 0x1C é zero). */
+static void test_detect_magic_wii(void) {
+    char *path = strdup("/tmp/test_wii_XXXXXX");
+    int fd = mkstemp(path);
+    uint8_t buf[0x20];
+    memset(buf, 0, sizeof(buf));
+    memcpy(buf, "RSBE01", 6); /* game code + maker, como num disco real */
+    buf[0x18] = 0x5D; buf[0x19] = 0x1C;
+    buf[0x1A] = 0x9E; buf[0x1B] = 0xA3;
+    ssize_t w = write(fd, buf, sizeof(buf));
+    assert(w == (ssize_t)sizeof(buf));
+    close(fd);
+    assert(detect_magic_bytes(path) == PLATFORM_WII);
+    unlink(path);
+    free(path);
+    printf("PASS: test_detect_magic_wii\n");
+}
+
 static void test_detect_magic_unknown(void) {
     char *path = strdup("/tmp/test_unk_XXXXXX");
     int fd = mkstemp(path);
@@ -158,6 +177,7 @@ static void test_detect_platform_chain(void) {
 
 int main(void) {
     test_detect_magic_gamecube();
+    test_detect_magic_wii();
     test_detect_magic_unknown();
     test_detect_rom_extension();
     test_detect_fs_ps2_exact_prefix();

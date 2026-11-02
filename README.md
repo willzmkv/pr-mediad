@@ -25,7 +25,7 @@ udev event → mount (ro) → magic bytes / marker files → platform → JSON �
 
 | Signal | Platforms |
 |---|---|
-| Magic bytes on the device | GameCube (`0x1C`), Wii (`0x1C`), Saturn / Dreamcast (`0x00`), Xbox (`0x10000`) |
+| Magic bytes on the device | GameCube (`0x1C`), Wii (`0x18`), Saturn / Dreamcast (`0x00`), Xbox (`0x10000`) |
 | Marker files on the mounted disc | PS2 (`SYSTEM.CNF` starting with `BOOT2 =`), PS1 (`SYSTEM.CNF` or `PSX.EXE`), PS3 (`PS3_DISC.SFB`), PS4 (`PS4_DISC.SFB`), PS5 (`PS5_DISC.SFB`) |
 | ROM file extension (`detect_rom_file`) | N64, NES, SNES, GB/GBC/GBA, DS, 3DS, Switch, Mega Drive, Atari 2600, PS1 (`.cue`) |
 
