@@ -36,6 +36,13 @@ target_include_directories(test_platform_db PRIVATE src)
 target_compile_options(test_platform_db PRIVATE -UNDEBUG)
 add_test(NAME test_platform_db COMMAND test_platform_db)
 
+add_executable(test_media_detect
+    tests/test_media_detect.c src/platform_db.c src/media_detect.c)
+target_include_directories(test_media_detect PRIVATE src)
+target_compile_options(test_media_detect PRIVATE -UNDEBUG)
+target_link_libraries(test_media_detect ${BLKID_LIBRARIES})
+add_test(NAME test_media_detect COMMAND test_media_detect)
+
 install(TARGETS pr-mediad DESTINATION /usr/bin)
 install(FILES pr-mediad.service
     DESTINATION /usr/lib/systemd/system)
