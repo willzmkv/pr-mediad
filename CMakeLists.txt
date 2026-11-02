@@ -16,6 +16,7 @@ target_include_directories(cjson PUBLIC vendor/cjson)
 set(MEDIAD_SOURCES
     src/platform_db.c
     src/media_detect.c
+    src/media_event.c
     src/ipc.c
     src/notify.c
 )
@@ -48,6 +49,11 @@ target_include_directories(test_ipc PRIVATE src)
 target_compile_options(test_ipc PRIVATE -UNDEBUG)
 target_link_libraries(test_ipc cjson pthread)
 add_test(NAME test_ipc COMMAND test_ipc)
+
+add_executable(test_media_event tests/test_media_event.c src/media_event.c)
+target_include_directories(test_media_event PRIVATE src)
+target_compile_options(test_media_event PRIVATE -UNDEBUG)
+add_test(NAME test_media_event COMMAND test_media_event)
 
 install(TARGETS pr-mediad DESTINATION /usr/bin)
 install(FILES pr-mediad.service
