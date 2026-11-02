@@ -52,6 +52,7 @@ static const DiscSignature DISC_SIGS[] = {
     /* File-based signatures */
     {PLATFORM_PS2,       SIG_FILE_PREFIX, 0, NULL, 0, "SYSTEM.CNF", "BOOT2="},
     {PLATFORM_PS1,       SIG_FILE_EXISTS, 0, NULL, 0, "SYSTEM.CNF", NULL},
+    {PLATFORM_PS1,       SIG_FILE_EXISTS, 0, NULL, 0, "PSX.EXE", NULL},
     {PLATFORM_PS3,       SIG_FILE_EXISTS, 0, NULL, 0, "PS3_DISC.SFB", NULL},
     {PLATFORM_PS4,       SIG_FILE_EXISTS, 0, NULL, 0, "PS4_DISC.sfb", NULL},
     {PLATFORM_PS5,       SIG_FILE_EXISTS, 0, NULL, 0, "PS5_DISC.sfb", NULL},

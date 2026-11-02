@@ -4,7 +4,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+#include <dirent.h>
 #include <sys/stat.h>
+
+/* Procura `name` em `dir` sem diferenciar maiúsculas/minúsculas.
+ * Necessário porque o isofs do Linux (map=normal, check=strict) expõe nomes
+ * ISO9660 sem Rock Ridge/Joliet em minúsculas (SYSTEM.CNF -> system.cnf).
+ * Retorna caminho completo alocado (caller faz free) ou NULL. */
+static char *find_entry_nocase(const char *dir, const char *name) {
+    DIR *d = opendir(dir);
+    if (!d) return NULL;
+
+    char *found = NULL;
+    struct dirent *de;
+    while ((de = readdir(d)) != NULL) {
+        if (strcasecmp(de->d_name, name) != 0) continue;
+        size_t len = strlen(dir) + 1 + strlen(de->d_name) + 1;
+        found = malloc(len);
+        if (found) snprintf(found, len, "%s/%s", dir, de->d_name);
+        break;
+    }
+    closedir(d);
+    return found;
+}
+
+/* Compara prefixo ignorando espaços/tabs, para que "BOOT2 = cdrom0:..."
+ * (formato dos discos PS2 reais) case com o prefixo "BOOT2=". */
+static int prefix_matches_ignoring_blanks(const char *text, const char *prefix) {
+    const char *t = text, *p = prefix;
+    for (;;) {
+        while (*t == ' ' || *t == '\t') t++;
+        while (*p == ' ' || *p == '\t') p++;
+        if (*p == '\0') return 1;
+        if (*t != *p) return 0;
+        t++;
+        p++;
+    }
+}
 
 PlatformID detect_magic_bytes(const char *device_path) {
     if (!device_path) return PLATFORM_UNKNOWN;
@@ -49,11 +86,9 @@ PlatformID detect_filesystem(const char *mount_point) {
         if (sigs[i].type == SIG_MAGIC_BYTES) continue;
         if (!sigs[i].filename) continue;
 
-        /* Monta caminho completo: mount_point + "/" + filename */
-        size_t len = strlen(mount_point) + 1 + strlen(sigs[i].filename) + 1;
-        char *path = malloc(len);
+        /* Caminho completo: mount_point + "/" + filename (case-insensitive) */
+        char *path = find_entry_nocase(mount_point, sigs[i].filename);
         if (!path) continue;
-        snprintf(path, len, "%s/%s", mount_point, sigs[i].filename);
 
         struct stat st;
         if (stat(path, &st) != 0) { free(path); continue; }
@@ -67,17 +102,13 @@ PlatformID detect_filesystem(const char *mount_point) {
             FILE *f = fopen(path, "r");
             free(path);
             if (!f) continue;
-            size_t plen = strlen(sigs[i].prefix);
-            char *buf = malloc(plen + 1);
-            if (!buf) { fclose(f); continue; }
-            size_t r = fread(buf, 1, plen, f);
+            /* lê o começo do arquivo; folga para espaços entre tokens */
+            char buf[256];
+            size_t r = fread(buf, 1, sizeof(buf) - 1, f);
             fclose(f);
             buf[r] = '\0';
-            if (strncmp(buf, sigs[i].prefix, plen) == 0) {
-                free(buf);
+            if (prefix_matches_ignoring_blanks(buf, sigs[i].prefix))
                 return sigs[i].platform;
-            }
-            free(buf);
             continue;
         }
         free(path);
