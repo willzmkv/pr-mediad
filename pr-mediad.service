@@ -1,0 +1,18 @@
+[Unit]
+Description=Project-R Media Detection Daemon
+Documentation=https://github.com/willzmkv/pr-mediad
+After=multi-user.target
+Wants=dbus.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/pr-mediad
+Restart=on-failure
+RestartSec=5
+User=root
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pr-mediad
+
+[Install]
+WantedBy=multi-user.target
