@@ -43,6 +43,12 @@ target_compile_options(test_media_detect PRIVATE -UNDEBUG)
 target_link_libraries(test_media_detect ${BLKID_LIBRARIES})
 add_test(NAME test_media_detect COMMAND test_media_detect)
 
+add_executable(test_ipc tests/test_ipc.c src/ipc.c src/platform_db.c)
+target_include_directories(test_ipc PRIVATE src)
+target_compile_options(test_ipc PRIVATE -UNDEBUG)
+target_link_libraries(test_ipc cjson pthread)
+add_test(NAME test_ipc COMMAND test_ipc)
+
 install(TARGETS pr-mediad DESTINATION /usr/bin)
 install(FILES pr-mediad.service
     DESTINATION /usr/lib/systemd/system)
